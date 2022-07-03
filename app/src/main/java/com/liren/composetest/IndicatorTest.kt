@@ -1,5 +1,8 @@
 package com.liren.composetest
 
+import android.animation.TypeConverter
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateValueAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,10 +29,7 @@ import kotlin.math.min
 class IndicatorTest {
 }
 
-
-
 @Composable
-@Preview
 fun Test() {
     // We want to have 30.sp distance from the top of the layout box to the baseline of the
 // first line of text.
@@ -55,16 +55,16 @@ fun TestLinearIndicator() {
         Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val progressLinear = remember { mutableStateOf(0.1f) }
-        Box(modifier = Modifier.background(Color.Blue, shape = RoundedCornerShape(3.dp))
+        val progressLinear =  remember { mutableStateOf(0.1f) }
+        val value = animateFloatAsState(targetValue = progressLinear.value)
+        Box(modifier = Modifier
+            .background(Color.Blue, shape = RoundedCornerShape(3.dp))
+            .width(200.dp)
         ) {
-            LinearProgressIndicator(progress = progressLinear.value,
-                modifier = Modifier
-                    .width(200.dp)
-                    .background(Color.Blue, shape = RoundedCornerShape(3.dp))
-                ,
-                color = Color.Red,
-                backgroundColor = Color.Transparent)
+            Row(modifier = Modifier
+                .height(5.dp)
+                .fillMaxWidth(value.value)
+                .background(Color.Red, shape = RoundedCornerShape(3.dp))) {}
         }
         Spacer(modifier = Modifier.height(20.dp))
         Button(onClick = {
