@@ -1,0 +1,98 @@
+package com.liren.composetest
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.layout.FirstBaseline
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
+import androidx.compose.ui.unit.sp
+import kotlin.math.max
+import kotlin.math.min
+
+class IndicatorTest {
+}
+
+
+
+@Composable
+@Preview
+fun Test() {
+    // We want to have 30.sp distance from the top of the layout box to the baseline of the
+// first line of text.
+    val distanceToBaseline = 30.sp
+// We convert the 30.sp value to dps, which is required for the paddingFrom API.
+    val distanceToBaselineDp = with(LocalDensity.current) { distanceToBaseline.toDp() }
+// The result will be a layout with 30.sp distance from the top of the layout box to the
+// baseline of the first line of text.
+    Text(
+        text = "This is an example.",
+        modifier = Modifier.paddingFrom(FirstBaseline, before = distanceToBaselineDp)
+    )
+}
+
+@Preview
+@Composable
+fun TestLinearIndicator() {
+
+    Column(modifier = Modifier
+        .width(300.dp)
+        .background(Color.White)
+        .height(300.dp),
+        Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        val progressLinear = remember { mutableStateOf(0.1f) }
+        Box(modifier = Modifier.background(Color.Blue, shape = RoundedCornerShape(3.dp))
+        ) {
+            LinearProgressIndicator(progress = progressLinear.value,
+                modifier = Modifier
+                    .width(200.dp)
+                    .background(Color.Blue, shape = RoundedCornerShape(3.dp))
+                ,
+                color = Color.Red,
+                backgroundColor = Color.Transparent)
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+        Button(onClick = {
+            progressLinear.value = min(progressLinear.value + 0.1f, 1f)
+        }, modifier = Modifier
+            .background(Color.White)
+            .padding(0.dp, 0.dp)
+            .wrapContentHeight()
+            .height(IntrinsicSize.Min)
+            .border(BorderStroke(1.dp, Color.Black), RoundedCornerShape(5.dp))
+            .shadow(6.dp, shape = RoundedCornerShape(5.dp))) {
+            Text("Test")
+        }
+        TextButton(
+            onClick = {
+                progressLinear.value = max(progressLinear.value - 0.1f, 0f)
+            },
+            modifier = Modifier
+                .background(Color.White)
+                .padding(0.dp)
+                .wrapContentHeight()
+                .height(IntrinsicSize.Min)
+                .border(BorderStroke(1.dp, Color.Black), RoundedCornerShape(5.dp))
+                ,
+            elevation = ButtonDefaults.elevation(),
+            contentPadding = PaddingValues(0.dp)
+        ) {
+            Text(text = "增加线性进度")
+        }
+    }
+}
