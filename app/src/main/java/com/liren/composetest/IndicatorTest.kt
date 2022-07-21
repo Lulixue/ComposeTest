@@ -1,6 +1,11 @@
 package com.liren.composetest
 
 import android.animation.TypeConverter
+import android.graphics.Typeface
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
+import android.text.style.UnderlineSpan
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateValueAsState
 import androidx.compose.foundation.BorderStroke
@@ -19,10 +24,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.FirstBaseline
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
+import androidx.core.text.HtmlCompat
 import kotlin.math.max
 import kotlin.math.min
 
@@ -93,6 +105,30 @@ fun TestLinearIndicator() {
             contentPadding = PaddingValues(0.dp)
         ) {
             Text(text = "增加线性进度")
+        }
+        Text(text =  HtmlCompat.fromHtml("<big>Hello</big> world <b>it's me</b>", HtmlCompat.FROM_HTML_MODE_COMPACT).toAnnotatedString())
+    }
+}
+
+/**
+ * Converts a [Spanned] into an [AnnotatedString] trying to keep as much formatting as possible.
+ *
+ * Currently supports `bold`, `italic`, `underline` and `color`.
+ */
+fun Spanned.toAnnotatedString(): AnnotatedString = buildAnnotatedString {
+    val spanned = this@toAnnotatedString
+    append(spanned.toString())
+    getSpans(0, spanned.length, Any::class.java).forEach { span ->
+        val start = getSpanStart(span)
+        val end = getSpanEnd(span)
+        when (span) {
+            is StyleSpan -> when (span.style) {
+                Typeface.BOLD -> addStyle(SpanStyle(fontWeight = FontWeight.Bold), start, end)
+                Typeface.ITALIC -> addStyle(SpanStyle(fontStyle = FontStyle.Italic), start, end)
+                Typeface.BOLD_ITALIC -> addStyle(SpanStyle(fontWeight = FontWeight.Bold, fontStyle = FontStyle.Italic), start, end)
+            }
+            is UnderlineSpan -> addStyle(SpanStyle(textDecoration = TextDecoration.Underline), start, end)
+            is ForegroundColorSpan -> addStyle(SpanStyle(color = Color(span.foregroundColor)), start, end)
         }
     }
 }
