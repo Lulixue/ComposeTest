@@ -1,0 +1,17 @@
+
+
+1.
+
+primary: ActionBar
+primaryVariant: StatusBar
+
+secondary: FloatingActionButton
+error: Error Contents
+
+background: background White
+
+onPrimary: White
+onSecondary: Black
+onBackground: Black
+onSurface: Black
+onError: White

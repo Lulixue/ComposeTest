@@ -22,7 +22,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    Greeting("Android")
+
+                    CustomLayout {
+                        CustomViews(items = listOf("first", "second", "third"))
+                    }
                 }
             }
         }
