@@ -6,11 +6,13 @@ import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.text.style.UnderlineSpan
+import android.view.MotionEvent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateValueAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -18,10 +20,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.FirstBaseline
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
@@ -38,8 +42,27 @@ import androidx.core.text.HtmlCompat
 import kotlin.math.max
 import kotlin.math.min
 
-class IndicatorTest {
+
+@OptIn(ExperimentalComposeUiApi::class)
+fun Modifier.clickableWithColorSelector(
+    updateColor: (Color) -> Unit,
+    clickedColor: Color,
+    normalColor: Color
+): Modifier {
+    return this.pointerInteropFilter {
+        when (it.action) {
+            MotionEvent.ACTION_DOWN -> {
+                updateColor(clickedColor)
+            }
+
+            MotionEvent.ACTION_UP  -> {
+                updateColor(normalColor)
+            }
+        }
+        true
+    }
 }
+
 
 @Composable
 fun Test() {
@@ -56,6 +79,7 @@ fun Test() {
     )
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Preview
 @Composable
 fun TestLinearIndicator() {
@@ -67,6 +91,7 @@ fun TestLinearIndicator() {
         Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        val textColor = remember { mutableStateOf(Color.White) }
         val progressLinear =  remember { mutableStateOf(0.1f) }
         val value = animateFloatAsState(targetValue = progressLinear.value)
         Box(modifier = Modifier
@@ -80,15 +105,19 @@ fun TestLinearIndicator() {
         }
         Spacer(modifier = Modifier.height(20.dp))
         Button(onClick = {
-            progressLinear.value = min(progressLinear.value + 0.1f, 1f)
-        }, modifier = Modifier
-            .background(Color.White)
-            .padding(0.dp, 0.dp)
-            .wrapContentHeight()
-            .height(IntrinsicSize.Min)
-            .border(BorderStroke(1.dp, Color.Black), RoundedCornerShape(5.dp))
-            .shadow(6.dp, shape = RoundedCornerShape(5.dp))) {
-            Text("Test")
+                progressLinear.value = min(progressLinear.value + 0.1f, 1f)
+            },
+            modifier = Modifier
+                .background(Color.White)
+                .padding(0.dp, 0.dp)
+                .wrapContentHeight()
+                .height(IntrinsicSize.Min)
+                .border(BorderStroke(1.dp, Color.Black), RoundedCornerShape(5.dp))
+                .shadow(6.dp, shape = RoundedCornerShape(5.dp))
+                .clickableWithColorSelector({ textColor.value = it}, Color.Yellow, Color.White)
+        ) {
+            Text(text = "Test",
+                color = textColor.value)
         }
         TextButton(
             onClick = {

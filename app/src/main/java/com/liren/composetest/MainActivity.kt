@@ -19,16 +19,41 @@ class MainActivity : ComponentActivity() {
             ComposeTestTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-
                     CustomLayout {
                         CustomViews(items = listOf("first", "second", "third"))
                     }
                 }
             }
         }
+
+        println("onCreate")
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+        println("onRestart")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        println("onResume")
+    }
+
+    override fun onStart() {
+        super.onStart()
+        println("onStart")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        println("onStop")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        println("onDestroy")
     }
 }
 

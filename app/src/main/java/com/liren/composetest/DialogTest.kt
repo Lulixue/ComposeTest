@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,6 +27,12 @@ import com.liren.composetest.ui.theme.AppDimens
 @Preview
 fun PreviewAppDialog() {
     AppDialog(title = "提示", message = "你好吗", okTitle = "好", cancelTitle = "取消", cancel = {} )
+}
+
+@Composable
+@Preview
+fun PreviewAppDialog2() {
+    AppDialog(title = "提示", message = "你好吗asdfasdfsdafasdfasdfasdfasdfasdfasdfas", okTitle = "好", cancelTitle = "取消", cancel = {} )
 }
 
 
@@ -87,16 +94,19 @@ private fun AppDialogDo(
             Column(
                 Modifier
                     .background(Color.White)
-                    .widthIn(200.dp, Dp.Infinity)
+                    .width(IntrinsicSize.Min)
+                    .widthIn(min = 200.dp)
                     .padding(top = 10.dp)
             ) {
                 Column(
                     Modifier
+                        .fillMaxWidth()
                         .padding(horizontal = 10.dp)
-                        .fillMaxWidth()) {
+                ) {
                     Text(
                         text = title,
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                            .wrapContentWidth(),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -106,19 +116,19 @@ private fun AppDialogDo(
                         text = message,
                         fontSize = 16.sp,
                         modifier = Modifier.align(Alignment.Start)
+                            .wrapContentWidth()
                     )
                 }
                 Spacer(modifier = Modifier.height(15.dp))
                 Divider(
                     Modifier
-                        .fillMaxWidth()
                         .height(AppDimens.LightDividerSize), color = AppColors.LightDivider
                 )
                 Row(
                     modifier = Modifier
+                        .wrapContentWidth()
                         .height(IntrinsicSize.Min)
                         .background(Color.White)
-                        .fillMaxWidth()
                 ) {
                     cancelTitle?.also {
                         AppDialogButton(it, Modifier.weight(1f), cancel)
