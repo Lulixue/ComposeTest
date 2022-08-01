@@ -34,12 +34,16 @@ fun CustomViews(items: List<String>) {
 fun CustomLayout(contents: @Composable () -> Unit) {
     val xGap = 20.dp.value.toInt()
     val yGap = 10.dp.value.toInt()
-    Layout(modifier = Modifier.padding(horizontal = 5.dp, vertical = 5.dp), content = contents) { measurables, constraints ->
+    Layout(modifier = Modifier.padding(horizontal = 5.dp, vertical = 5.dp)
+        .background(Color.Blue), content = contents) { measurables, constraints ->
         // Don't constrain child views further, measure them with given constraints
         // List of measured children
         val placeables = measurables.map { measurable ->
             // Measure each children
             measurable.measure(constraints)
+        }
+        if (placeables.isEmpty()) {
+            return@Layout layout(0, 0) {}
         }
 
         val coordinates = mutableListOf<Point>()
@@ -89,20 +93,22 @@ fun CustomLayout(contents: @Composable () -> Unit) {
 
         var previous = 0
         var gap = 0
+        var totalHeight = 0L
 
         maxLineHeights.toList().forEachIndexed { j, it ->
             for (i in previous..it.first) {
                 val height = placeables[i].height
                 coordinates[i].y = coordinates[i].y + (it.second - height) / 2 + gap
-
             }
             previous = it.first+1
             gap += yGap
+            totalHeight += it.second
+            totalHeight += yGap
         }
 
 
         // Set the size of the layout as big as it can
-        layout(constraints.maxWidth, constraints.maxHeight) {
+        layout(constraints.maxWidth, (totalHeight - yGap).toInt()) {
             // Track the y co-ord we have placed children up to
             coordinates.forEachIndexed { i, coord ->
                 placeables[i].placeRelative(coord.x, coord.y)
