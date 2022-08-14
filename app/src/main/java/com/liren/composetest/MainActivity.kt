@@ -1,6 +1,7 @@
 package com.liren.composetest
 
 import android.os.Bundle
+import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,15 +16,14 @@ import com.liren.composetest.ui.theme.ComposeTestTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.decorView.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
         setContent {
             ComposeTestTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     color = MaterialTheme.colors.background
                 ) {
-                    CustomLayout {
-                        CustomViews(items = listOf("first", "second", "third"))
-                    }
+                    ImageView()
                 }
             }
         }
