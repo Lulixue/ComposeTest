@@ -79,6 +79,17 @@ fun Test() {
     )
 }
 
+@Preview
+@Composable
+fun PreviewSlider() {
+    MaterialTheme {
+        Surface(modifier = Modifier.size(300.dp)) {
+            Slider(1f, {},
+                modifier = Modifier.padding(10.dp).fillMaxWidth())
+        }
+    }
+}
+
 @OptIn(ExperimentalComposeUiApi::class)
 @Preview
 @Composable
@@ -114,7 +125,7 @@ fun TestLinearIndicator() {
                 .height(IntrinsicSize.Min)
                 .border(BorderStroke(1.dp, Color.Black), RoundedCornerShape(5.dp))
                 .shadow(6.dp, shape = RoundedCornerShape(5.dp))
-                .clickableWithColorSelector({ textColor.value = it}, Color.Yellow, Color.White)
+                .clickableWithColorSelector({ textColor.value = it }, Color.Yellow, Color.White)
         ) {
             Text(text = "Test",
                 color = textColor.value)
