@@ -33,6 +33,9 @@ import kotlin.math.sqrt
 
 
 class OffsetValueAnimator(private val fromOffset: Offset, destX: Float, destY: Float, private val onOffsetChange: (Offset) -> Unit) {
+
+    constructor(fromOffset: Offset, toOffset: Offset, onOffsetChange: (Offset) -> Unit) : this(fromOffset, toOffset.x, toOffset.y, onOffsetChange)
+
     private val deltaX = destX - fromOffset.x
     private val deltaY = destY - fromOffset.y
     private var animationDisposed = false
@@ -54,8 +57,8 @@ class OffsetValueAnimator(private val fromOffset: Offset, destX: Float, destY: F
     fun stop() {
         if (animator.isRunning) {
             animator.pause()
-            animationDisposed = true
         }
+        animationDisposed = true
     }
 
     fun start() {
@@ -71,7 +74,20 @@ data class OffsetRange(
     var minShowOffset: PointF = PointF(),
     var maxShowOffset: PointF = PointF()
 ) {
-    
+    fun offsetOverflow(offset: Offset): Boolean {
+        return offset.x !in minOffset.x..maxOffset.x ||
+                offset.y !in minOffset.y..maxOffset.y
+    }
+    fun getShowOffset(offset: Offset): Offset {
+        val newOffsetX = min(max(minShowOffset.x, offset.x), maxShowOffset.x)
+        val newOffsetY = min(max(minShowOffset.y, offset.y), maxShowOffset.y)
+        return Offset(newOffsetX, newOffsetY)
+    }
+    fun getRecoveryOffset(offset: Offset): Offset {
+        val newOffsetX = min(max(minOffset.x, offset.x), maxOffset.x)
+        val newOffsetY = min(max(minOffset.y, offset.y), maxOffset.y)
+        return Offset(newOffsetX, newOffsetY)
+    }
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -99,16 +115,15 @@ fun ImageView() {
     }
     fun imageShowWidth() = parentSize.width
     fun imageShowHeight() = (parentSize.width / imageSize.width) * imageSize.height
-    fun getOffsetWidthLimit(percent: Float) = parentSize.width * scale * percent
-    fun getOffsetHeightLimit(percent: Float) = parentSize.height * scale * percent
 
     fun updateRange() {
-        range.minOffset.x = -(imageShowWidth() * scale - parentSize.width)
-        range.maxOffset.x = 0f
+        range.minOffset.x = -(imageShowWidth() * scale - parentSize.width) / 2
+        range.maxOffset.x = (imageShowWidth() * scale - parentSize.width) / 2
 
-        range.maxOffset.y = min((imageShowHeight() - parentSize.height) * 0.5f * scale, 0f)
+        range.maxOffset.y = min((parentSize.height - imageShowHeight()) * scale, parentSize.height)
         range.minOffset.y = (imageShowHeight() - parentSize.height) * 0.5f * scale
 
+        println("min: ${range.minOffset}, max: ${range.maxOffset}")
         range.minShowOffset = PointF(range.minOffset.x - 100f, range.minOffset.y - 100f)
         range.maxShowOffset = PointF(range.maxOffset.x + 100f, range.maxOffset.y + 100f)
     }
@@ -157,14 +172,6 @@ fun ImageView() {
             private var downOffset = Offset.Zero
             private val touchSlop get() = ViewConfiguration.getTouchSlop() * scale
 
-
-            private val criticalOffsetX get() = parentSize.width *  scale * 0.5f
-            private val criticalOffsetY get() = parentSize.height * (scale * 0.5f)
-            private val maxAnimationOffsetX get() = parentSize.width * (scale * 0.25f)
-            private val maxAnimationOffsetY get() = parentSize.height * (scale * 0.25f)
-            private val offsetXRange get() = -criticalOffsetX..criticalOffsetX
-            private val offsetYRange get() = -criticalOffsetY..criticalOffsetY
-
             @SuppressLint("ClickableViewAccessibility")
             override fun onTouch(v: View?, e: MotionEvent): Boolean {
                 when (e.actionMasked) {
@@ -183,31 +190,20 @@ fun ImageView() {
                             }
                             if (dragging) {
                                 val newOffset = downOffset + new
-                                var newOffsetX = newOffset.x
-                                var newOffsetY = newOffset.y
-                                var overflow = false
+//                                val overflow = range.offsetOverflow(newOffset)
+//                                if (overflow) {
+//                                    offset = range.getShowOffset(newOffset)
+//                                    if (overflow) {
+//                                        valueAnimation = OffsetValueAnimator(offset, range.getRecoveryOffset(offset)) {
+//                                            offset = it
+//                                        }
+//                                    }
+//                                } else {
+//                                    offset = newOffset
+//                                    valueAnimation?.stop()
+//                                }
 
-                                if (newOffset.x !in offsetXRange) {
-                                    val overflowLT = newOffset.x > criticalOffsetX
-                                    overflow = true
-                                    newOffsetX = if (overflowLT) min(maxAnimationOffsetX, newOffset.x) else
-                                                    max(-maxAnimationOffsetX, newOffset.x)
-                                }
-                                if (newOffset.y !in offsetYRange) {
-                                    overflow = true
-                                    newOffsetY = if (newOffset.y > criticalOffsetY) min(maxAnimationOffsetY, newOffset.y)
-                                                else max(-maxAnimationOffsetY, newOffset.y)
-
-                                }
-
-                                offset = Offset(newOffsetX, newOffsetY)
-                                if (overflow) {
-                                    val destOffsetX = max(min(newOffsetX, criticalOffsetX), -criticalOffsetX)
-                                    val destOffsetY = max(min(newOffsetY, criticalOffsetY), -criticalOffsetY)
-                                    valueAnimation = OffsetValueAnimator(offset, destOffsetX, destOffsetY) {
-                                        offset = it
-                                    }
-                                }
+                                offset = newOffset
                                 println("on drag $offset")
                             }
                         }
@@ -230,12 +226,12 @@ fun ImageView() {
         })
     }
 
-
     Box(modifier = Modifier
         .fillMaxSize()
         .onGloballyPositioned {
             if (parentSize.isEmpty()) {
                 parentSize = Size(it.size.width.toFloat(), it.size.height.toFloat())
+                updateRange()
             }
         },
         contentAlignment = Alignment.Center) {
@@ -265,6 +261,7 @@ fun ImageView() {
                 .onGloballyPositioned {
                     if (imageSize.isEmpty()) {
                         imageSize = Size(it.size.width.toFloat(), it.size.height.toFloat())
+                        updateRange()
                     }
                 }
                 .clipToBounds()
