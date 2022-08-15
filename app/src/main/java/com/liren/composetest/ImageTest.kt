@@ -2,7 +2,9 @@ package com.liren.composetest
 
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
+import android.graphics.PointF
 import android.view.*
+import androidx.annotation.FloatRange
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.TwoWayConverter
 import androidx.compose.foundation.Image
@@ -63,10 +65,19 @@ class OffsetValueAnimator(private val fromOffset: Offset, destX: Float, destY: F
     }
 }
 
+data class OffsetRange(
+    var minOffset: PointF = PointF(),
+    var maxOffset: PointF = PointF(),
+    var minShowOffset: PointF = PointF(),
+    var maxShowOffset: PointF = PointF()
+) {
+    
+}
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ImageView() {
+    var range by remember { mutableStateOf(OffsetRange())}
     var scale by remember { mutableStateOf(1f) }
     var scaling by remember {
         mutableStateOf(false)
@@ -86,6 +97,21 @@ fun ImageView() {
     var valueAnimation by remember {
         mutableStateOf<OffsetValueAnimator?>(null)
     }
+    fun imageShowWidth() = parentSize.width
+    fun imageShowHeight() = (parentSize.width / imageSize.width) * imageSize.height
+    fun getOffsetWidthLimit(percent: Float) = parentSize.width * scale * percent
+    fun getOffsetHeightLimit(percent: Float) = parentSize.height * scale * percent
+
+    fun updateRange() {
+        range.minOffset.x = -(imageShowWidth() * scale - parentSize.width)
+        range.maxOffset.x = 0f
+
+        range.maxOffset.y = min((imageShowHeight() - parentSize.height) * 0.5f * scale, 0f)
+        range.minOffset.y = (imageShowHeight() - parentSize.height) * 0.5f * scale
+
+        range.minShowOffset = PointF(range.minOffset.x - 100f, range.minOffset.y - 100f)
+        range.maxShowOffset = PointF(range.maxOffset.x + 100f, range.maxOffset.y + 100f)
+    }
 
     val context = LocalContext.current
     var offset by remember { mutableStateOf(Offset.Zero) }
@@ -101,6 +127,7 @@ fun ImageView() {
                 val offsetX = (beginOffset.x / beginScale) * scale
                 val offsetY = (beginOffset.y / beginScale) * scale
                 offset = Offset(offsetX, offsetY)
+                updateRange()
                 return false
             }
 
@@ -122,10 +149,6 @@ fun ImageView() {
     val scaleGestureDetector by remember {
         mutableStateOf(ScaleGestureDetector(context, scaleListener))
     }
-    fun imageShowWidth() = parentSize.width
-    fun imageShowHeight() = (parentSize.width / imageSize.width) * imageSize.height
-    fun getOffsetWidthLimit(percent: Float) = parentSize.width * scale * percent
-    fun getOffsetHeightLimit(percent: Float) = parentSize.height * scale * percent
 
     val dragListener by remember {
         mutableStateOf(object : View.OnTouchListener {

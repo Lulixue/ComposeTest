@@ -2,6 +2,7 @@ package com.liren.composetest
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.*
 
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -20,5 +21,13 @@ class ExampleInstrumentedTest {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("com.liren.composetest", appContext.packageName)
+
+        GlobalScope.launch(Dispatchers.Unconfined) {
+            println("My job is ${coroutineContext[Job]}")
+            println("running in ${Thread.currentThread().name}")
+            withContext(Dispatchers.IO) {
+                println("running in ${Thread.currentThread().name}")
+            }
+        }
     }
 }
