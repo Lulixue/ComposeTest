@@ -17,8 +17,28 @@ class TestViewGroup(context: Context, attrs: AttributeSet?) : ViewPager(context,
     constructor(context: Context) : this(context, null)
 
     init {
+        addOnPageChangeListener(object : OnPageChangeListener {
+            override fun onPageScrolled(
+                position: Int,
+                positionOffset: Float,
+                positionOffsetPixels: Int
+            ) {
+                println("onPageScrolled $position $positionOffset")
+            }
+
+            override fun onPageSelected(position: Int) {
+                println("onPageSelected $position")
+            }
+
+            override fun onPageScrollStateChanged(state: Int) {
+                println("onPageScrollStateChanged $state")
+            }
+
+        })
         adapter = TestAdapter()
-        setBackgroundColor(Color.Blue.toArgb())
+        overScrollMode = OVER_SCROLL_ALWAYS
+        setBackgroundColor(Color.Black.toArgb())
+        currentItem = 3
     }
 
     class TestAdapter : PagerAdapter() {
