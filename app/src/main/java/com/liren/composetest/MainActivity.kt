@@ -1,5 +1,6 @@
 package com.liren.composetest
 
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.View
 import androidx.activity.ComponentActivity
@@ -10,7 +11,9 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.viewinterop.AndroidView
 import com.liren.composetest.ui.theme.ComposeTestTheme
 
 class MainActivity : ComponentActivity() {
@@ -23,7 +26,11 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     color = MaterialTheme.colors.background
                 ) {
-                    ImageView()
+                    AndroidView(factory = {
+                        TestViewGroup(it).apply {
+                            background = ColorDrawable(Color.Blue.value.toInt())
+                        }
+                    }, modifier = Modifier.fillMaxSize())
                 }
             }
         }

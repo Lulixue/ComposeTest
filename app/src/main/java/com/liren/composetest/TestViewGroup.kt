@@ -1,0 +1,52 @@
+package com.liren.composetest
+
+import android.content.Context
+import android.graphics.drawable.ColorDrawable
+import android.util.AttributeSet
+import android.view.View
+import android.view.ViewGroup
+import android.view.ViewParent
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.viewpager.widget.PagerAdapter
+import androidx.viewpager.widget.ViewPager
+
+class TestViewGroup(context: Context, attrs: AttributeSet?) : ViewPager(context, attrs) {
+    constructor(context: Context) : this(context, null)
+
+    init {
+        adapter = TestAdapter()
+        setBackgroundColor(Color.Blue.toArgb())
+    }
+
+    class TestAdapter : PagerAdapter() {
+        private val colors = arrayOf(Color.Blue, Color.Gray, Color.Yellow, Color.Cyan)
+        override fun getCount(): Int {
+            return colors.size
+        }
+
+        override fun isViewFromObject(view: View, obj: Any): Boolean {
+            return view == obj as View
+        }
+
+        override fun instantiateItem(container: ViewGroup, position: Int): Any {
+            return View(container.context).apply {
+                background = ColorDrawable(colors[position].toArgb())
+
+                container.addView(this, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            }
+        }
+
+        override fun destroyItem(container: ViewGroup, position: Int, `object`: Any) {
+            container.removeView(`object` as View)
+        }
+    }
+
+
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        println("onLayout")
+        super.onLayout(changed, l, t, r, b)
+    }
+}
