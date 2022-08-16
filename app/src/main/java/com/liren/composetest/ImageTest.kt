@@ -26,7 +26,10 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import kotlinx.coroutines.delay
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -49,7 +52,7 @@ class OffsetValueAnimator(private val fromOffset: Offset, destX: Float, destY: F
                 animationDisposed = true
             }
         }
-        this.duration = 300L
+        this.duration = 200L + max(abs(destX), abs(destY)).toInt() / 10
     }
 
     fun isRunning() = animator.isRunning
@@ -74,18 +77,29 @@ data class OffsetRange(
     var minShowOffset: PointF = PointF(),
     var maxShowOffset: PointF = PointF()
 ) {
-    fun offsetOverflow(offset: Offset): Boolean {
-        return offset.x !in minOffset.x..maxOffset.x ||
-                offset.y !in minOffset.y..maxOffset.y
+
+    private fun offsetXOverflow(offset: Float): Boolean {
+        return offset !in minOffset.x..maxOffset.x
     }
+    private fun offsetYOverflow(offset: Float): Boolean {
+        return offset !in minOffset.y..maxOffset.y
+    }
+    fun offsetOverflow(offset: Offset): Boolean {
+        return offsetXOverflow(offset.x) || offsetYOverflow(offset.y)
+    }
+
+    private fun Float.clap(min: Float, max: Float): Float {
+        return min(max(min, this), max)
+    }
+
     fun getShowOffset(offset: Offset): Offset {
-        val newOffsetX = min(max(minShowOffset.x, offset.x), maxShowOffset.x)
-        val newOffsetY = min(max(minShowOffset.y, offset.y), maxShowOffset.y)
+        val newOffsetX = if (offsetXOverflow(offset.x)) offset.x.clap(minOffset.x, maxOffset.x) else offset.x
+        val newOffsetY = if (offsetYOverflow(offset.y)) offset.y.clap(minOffset.y, maxOffset.y) else offset.y
         return Offset(newOffsetX, newOffsetY)
     }
     fun getRecoveryOffset(offset: Offset): Offset {
-        val newOffsetX = min(max(minOffset.x, offset.x), maxOffset.x)
-        val newOffsetY = min(max(minOffset.y, offset.y), maxOffset.y)
+        val newOffsetX = if (offsetXOverflow(offset.x)) offset.x.clap(minShowOffset.x, maxShowOffset.x) else offset.x
+        val newOffsetY = if (offsetYOverflow(offset.y)) offset.y.clap(minShowOffset.y, maxShowOffset.y) else offset.y
         return Offset(newOffsetX, newOffsetY)
     }
 }
@@ -114,17 +128,17 @@ fun ImageView() {
         mutableStateOf<OffsetValueAnimator?>(null)
     }
     fun imageShowWidth() = parentSize.width
-    fun imageShowHeight() = (parentSize.width / imageSize.width) * imageSize.height
+    fun imageShowHeight() = imageShowWidth() / imageSize.width * imageSize.height
 
     fun updateRange() {
         range.minOffset.x = -(imageShowWidth() * scale - parentSize.width) / 2
         range.maxOffset.x = (imageShowWidth() * scale - parentSize.width) / 2
 
-        range.maxOffset.y = min((parentSize.height - imageShowHeight()) * scale, parentSize.height)
+        range.maxOffset.y = (parentSize.height - imageShowHeight()) * 0.5f * scale
         range.minOffset.y = (imageShowHeight() - parentSize.height) * 0.5f * scale
 
         println("min: ${range.minOffset}, max: ${range.maxOffset}")
-        range.minShowOffset = PointF(range.minOffset.x - 100f, range.minOffset.y - 100f)
+        range.minShowOffset = PointF(range.minOffset.x - 100f, range.minOffset.y + 100f)
         range.maxShowOffset = PointF(range.maxOffset.x + 100f, range.maxOffset.y + 100f)
     }
 
@@ -190,20 +204,20 @@ fun ImageView() {
                             }
                             if (dragging) {
                                 val newOffset = downOffset + new
-//                                val overflow = range.offsetOverflow(newOffset)
-//                                if (overflow) {
-//                                    offset = range.getShowOffset(newOffset)
-//                                    if (overflow) {
-//                                        valueAnimation = OffsetValueAnimator(offset, range.getRecoveryOffset(offset)) {
-//                                            offset = it
-//                                        }
-//                                    }
-//                                } else {
-//                                    offset = newOffset
-//                                    valueAnimation?.stop()
-//                                }
-
-                                offset = newOffset
+                                val overflow = range.offsetOverflow(newOffset)
+                                if (overflow) {
+                                    offset = range.getShowOffset(newOffset)
+                                    if (overflow) {
+                                        valueAnimation = OffsetValueAnimator(offset, range.getRecoveryOffset(offset)) {
+                                            offset = it
+                                        }
+                                    }
+                                } else {
+                                    offset = newOffset
+                                    valueAnimation?.stop()
+                                }
+                                println("new offset: $newOffset")
+//                                offset = newOffset
                                 println("on drag $offset")
                             }
                         }
@@ -228,19 +242,34 @@ fun ImageView() {
 
     Box(modifier = Modifier
         .fillMaxSize()
+        .background(Color.Black)
         .onGloballyPositioned {
             if (parentSize.isEmpty()) {
                 parentSize = Size(it.size.width.toFloat(), it.size.height.toFloat())
-                updateRange()
             }
         },
         contentAlignment = Alignment.Center) {
-        Image(painter = painterResource(id = R.drawable.mengdian),
+
+        val painter = rememberAsyncImagePainter(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(R.drawable.mengdian)
+                .allowHardware(false)
+                .size(coil.size.Size.ORIGINAL) // Set the target size to load the image at.
+                .build(),
+            onState = {
+                if (imageSize.isEmpty() && it.painter != null) {
+                    imageSize = it.painter!!.intrinsicSize
+                    updateRange()
+                }
+            }
+        )
+
+        Image(painter = painter,
             contentDescription = null,
             modifier = Modifier
                 .fillMaxSize()
                 .pointerInteropFilter {
-                    println("event ${MotionEvent.actionToString(it.actionMasked)}")
+//                    println("event ${MotionEvent.actionToString(it.actionMasked)}")
                     when (it.actionMasked) {
                         MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                             dragging = false
@@ -258,12 +287,6 @@ fun ImageView() {
                     translationY = offset.y
                 )
                 .background(Color.Blue)
-                .onGloballyPositioned {
-                    if (imageSize.isEmpty()) {
-                        imageSize = Size(it.size.width.toFloat(), it.size.height.toFloat())
-                        updateRange()
-                    }
-                }
                 .clipToBounds()
             ,
             contentScale = ContentScale.FillWidth
