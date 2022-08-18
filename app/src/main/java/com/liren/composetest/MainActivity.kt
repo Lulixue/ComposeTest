@@ -3,6 +3,7 @@ package com.liren.composetest
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +21,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.decorView.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+//        setContentView(TestViewGroup(this).apply {
+//          layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+//        })
         setContent {
             ComposeTestTheme {
                 // A surface container using the 'background' color from the theme
